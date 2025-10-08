@@ -1,6 +1,6 @@
 .git
 .github
-.env
+.env # injected only at runtime for security reasons
 .env_example
 *.sh
 README.md
