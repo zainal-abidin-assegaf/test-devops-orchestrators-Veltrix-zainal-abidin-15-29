@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# Exit immediately if any command fails
 set -e
 
 timestamp=$(date +"%Y%m%d_%H%M%S")
