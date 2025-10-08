@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 timestamp=$(date +"%Y%m%d_%H%M%S")
 
 # Ensure the 'logs' directory exists
