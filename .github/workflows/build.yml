@@ -34,3 +34,8 @@ jobs:
           context: .
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/test-devops-orchestrators:${{ env.SHORT_SHA }}
+
+      - name: Display Docker image URL
+        run: |
+          IMAGE_URL=${{ secrets.DOCKERHUB_USERNAME }}/test-devops-orchestrators:${{ env.SHORT_SHA }}
+          echo "Docker image pushed: $IMAGE_URL"
