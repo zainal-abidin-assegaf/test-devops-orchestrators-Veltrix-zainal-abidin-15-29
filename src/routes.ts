@@ -5,39 +5,62 @@ import fs from "fs";
 const router = Router();
 
 router.get("/health", (req, res) => {
-    res.json({ status: "ok", timestamp: new Date() });
+  res.json({ status: "ok", timestamp: new Date() });
 });
 
+router.get("/readyz", (req, res) => {
+  const requiredEnv = ["INFURA_URL"];
+  const missingEnv = requiredEnv.filter((env) => !process.env[env]);
+
+  if (missingEnv.length > 0) {
+    return res.status(503).json({
+      success: false,
+    });
+  }
+
+  res.json({
+    success: true,
+  });
+});
 
 router.get("/healthz", (req, res) => {
   const logFile = path.join(__dirname, "../logs/output.log");
 
   try {
     const logLines = fs.readFileSync(logFile, "utf-8").trim().split("\n");
-    const lastLine = logLines.reverse().find(line => line.includes("[heartbeat]"));
+    const lastLine = logLines
+      .reverse()
+      .find((line) => line.includes("[heartbeat]"));
 
     if (!lastLine) {
-      return res.status(503).json({ status: "fail", reason: "no heartbeat found" });
+      return res
+        .status(503)
+        .json({ status: "fail", reason: "no heartbeat found" });
     }
 
     const match = lastLine.match(/\[heartbeat\] (.+)/);
     if (!match) {
-      return res.status(503).json({ status: "fail", reason: "malformed heartbeat log" });
+      return res
+        .status(503)
+        .json({ status: "fail", reason: "malformed heartbeat log" });
     }
 
     const lastTimestamp = new Date(match[1]);
     const now = new Date();
-    const uptimeSeconds = Math.floor((now.getTime() - lastTimestamp.getTime()) / 1000);
+    const uptimeSeconds = Math.floor(
+      (now.getTime() - lastTimestamp.getTime()) / 1000
+    );
     const uptimeMinutes = Math.floor(uptimeSeconds / 60);
 
     const isHealthy = uptimeSeconds < 10;
 
     return res.status(isHealthy ? 200 : 503).json({
+      success: isHealthy,
       status: isHealthy ? "ok" : "fail",
       last_heartbeat: lastTimestamp.toISOString(),
       uptime_seconds: uptimeSeconds,
       uptime_minutes: uptimeMinutes,
-      reason: isHealthy ? undefined : "heartbeat stale"
+      reason: isHealthy ? undefined : "heartbeat stale",
     });
   } catch (err: any) {
     return res.status(500).json({ status: "error", message: err.message });
@@ -51,10 +74,11 @@ router.get("/metrics", (req, res) => {
   let lastTimestamp = null;
 
   try {
-    const lines = fs.readFileSync(logFile, "utf-8")
+    const lines = fs
+      .readFileSync(logFile, "utf-8")
       .trim()
       .split("\n")
-      .filter(line => line.includes("[heartbeat]"));
+      .filter((line) => line.includes("[heartbeat]"));
 
     heartbeatCount = lines.length;
 
@@ -67,15 +91,17 @@ router.get("/metrics", (req, res) => {
     }
 
     const now = new Date();
-    const secondsSinceLast = lastTimestamp ? Math.floor((now.getTime() - lastTimestamp.getTime()) / 1000) : -1;
+    const secondsSinceLast = lastTimestamp
+      ? Math.floor((now.getTime() - lastTimestamp.getTime()) / 1000)
+      : -1;
 
     // System resource metrics
     const memoryUsage = process.memoryUsage(); // in bytes
-    const cpuUsage = process.cpuUsage();       // in microseconds
+    const cpuUsage = process.cpuUsage(); // in microseconds
 
     res.set("Content-Type", "text/plain");
     res.send(
-`# HELP swap_optimizer_heartbeat_count Total number of heartbeats recorded
+      `# HELP swap_optimizer_heartbeat_count Total number of heartbeats recorded
 # TYPE swap_optimizer_heartbeat_count counter
 swap_optimizer_heartbeat_count ${heartbeatCount}
 
