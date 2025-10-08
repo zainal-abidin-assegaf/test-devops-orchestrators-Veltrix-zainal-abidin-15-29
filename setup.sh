@@ -1,4 +1,11 @@
 #!/bin/bash
+timestamp=$(date +"%Y%m%d_%H%M%S")
+
+# Ensure the 'logs' directory exists
+mkdir -p logs
+
+# Redirect all output (stdout + stderr) to both terminal and log file
+exec > >(tee -a logs/setup_$timestamp.log) 2>&1
 
 echo "[Swap Optimizer Setup] Starting setup..."
 
@@ -49,10 +56,21 @@ detect_and_install_node() {
     esac
 }
 
+detect_node_version() {
+    NODE_VERSION=$(node -v)
+    NODE_VERSION_MAJOR=$(node -v | grep -oE '[0-9]+' | head -1)
+
+    if [ "$NODE_VERSION_MAJOR" -ge 18 ]; then
+        echo "Node.js version $(node -v) is 18 or higher."
+    else
+        echo "[INFO] ⚠️ Node.js version $(node -v) is below 18."
+        exit 1
+    fi
+}
+
 detect_and_install_node
 
-# Prepare logs directory
-mkdir -p logs
+detect_node_version
 
 # Install dependencies
 echo "[INFO] Installing Node.js dependencies..."
