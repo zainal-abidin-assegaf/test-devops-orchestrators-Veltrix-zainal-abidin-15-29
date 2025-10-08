@@ -33,7 +33,9 @@ fi
 # Run orchestrator logic
 echo "[Swap Optimizer] Starting orchestrator..."
 
-npm run build & npm start &
+npm run build
+
+npm start &
 
 (
   sleep 600
