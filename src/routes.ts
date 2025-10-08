@@ -15,6 +15,7 @@ router.get("/readyz", (req, res) => {
   if (missingEnv.length > 0) {
     return res.status(503).json({
       success: false,
+      message: "some environment variables are missing or API not ready yet",
     });
   }
 
